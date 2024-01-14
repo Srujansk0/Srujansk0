@@ -1,0 +1,132 @@
+#include <Servo.h>
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#include <MFRC522.h>
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+// Declaration for SSD1306 display connected using I2C
+#define OLED_RESET     -1 // Reset pin
+#define SCREEN_ADDRESS 0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+Servo servo;
+
+constexpr uint8_t RST_PIN = D3;     // Configurable, see typical pin layout above
+constexpr uint8_t SS_PIN = D4;     // Configurable, see typical pin layout above
+MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
+MFRC522::MIFARE_Key key;
+
+String tag;
+
+void setup()
+{
+  Serial.begin(9600);
+  SPI.begin(); // Init SPI bus
+  rfid.PCD_Init(); // Init MFRC522
+  // initialize the OLED object
+  servo.attach(15);//pin number of servo
+  servo.write(0);
+  delay(2000);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS))
+  {
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); // Don't proceed, loop forever
+  }
+  // Clear the buffer.
+  display.clearDisplay();
+  display.setTextSize(1.5);
+  display.setTextColor(WHITE);
+  display.setCursor(20,18);
+  display.println("AUTHENTICATION");
+  display.setCursor(38,38);
+  display.println("REQUIRED");
+  display.display();
+  delay(2000);
+  display.clearDisplay();
+}
+
+void loop() 
+{
+  if ( ! rfid.PICC_IsNewCardPresent())
+    return;
+  if (rfid.PICC_ReadCardSerial()) 
+  {
+    for (byte i = 0; i < 4; i++) 
+    {
+      tag += rfid.uid.uidByte[i];
+    }
+    Serial.println(tag);
+    if (tag == "18419914018") {
+      Serial.println("Access Granted!");
+      digitalWrite(D8,HIGH);
+      delay(1000);
+      digitalWrite(D8,LOW);
+      delay(1000);
+      delay(100);
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(20,18);
+      display.println("ACCESS GRANTED ! ");
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(38,28);
+      display.println("BOOM LIFTING!");
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(48,28);
+      display.println("1 SLOT FREE");
+      display.display();
+      servo.write(110);
+      delay(2000);
+      servo.write(0);
+      delay(2000);
+      display.clearDisplay();
+      display.setTextSize(1.5);
+      display.setTextColor(WHITE);
+      display.setCursor(20,18);
+      display.println("AUTHENTICATION");
+      display.setCursor(38,28);
+      display.println("REQUIRED");
+      display.display();
+      delay(2000);
+      display.clearDisplay();
+    } 
+    else 
+    {
+      Serial.println("Access Denied!");
+      delay(100);
+      servo.write(0);
+      delay(1000);
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(20,28);
+      display.println("ACCESS DENIED!");
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(38,38);
+      display.println("BOOM CLOSED!");
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(48,28);
+      display.println("1 SLOT FREE");
+      display.display();
+      delay(2000);
+      display.clearDisplay();
+      display.setTextSize(1.5);
+      display.setTextColor(WHITE);
+      display.setCursor(20,18);
+      display.println("AUTHENTICATION");
+      display.setCursor(38,38);
+      display.println("REQUIRED");
+      display.display();
+      display.clearDisplay();
+    }
+    tag = "";
+    rfid.PICC_HaltA();
+    rfid.PCD_StopCrypto1();
+    }
+  }
