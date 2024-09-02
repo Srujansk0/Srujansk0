@@ -1,20 +1,20 @@
 #define BLYNK_TEMPLATE_ID "TMPL3Tb2oZcEt"
 #define BLYNK_TEMPLATE_NAME "default 1"
-//////
+//////OLED 
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-/////
+/////OXIMETER 
 #include "MAX30100_PulseOximeter.h"
-/////
+/////DHT11
 #include <DHT.h>//adfruit DHT lib
-////
+////BLYNK
 #include <Blynk.h>
 #include <ESP8266WiFi.h>
 #include <BlynkSimpleEsp8266.h>
 #define BLYNK_PRINT Serial
-////
+////SCREE parameters 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 ////
